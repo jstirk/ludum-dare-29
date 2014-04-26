@@ -14,31 +14,84 @@ module Utopia
     end
 
     def render(container, game, graphics)
-      @tiles_x ||= @screen_x / TILE_SIZE
-      @tiles_y ||= @screen_y / TILE_SIZE
+      vx = @screen_x / 2
+      vy = @screen_y / 2
 
-      (-@tiles_x/2).upto(@tiles_x/2) do |dx|
-        (-@tiles_y/2).upto(@tiles_y/2) do |dy|
-          x = @x + dx
-          y = @y + dy
+      graphics.draw_oval(vx-10,vy-10,20,20)
 
-          vx = (@screen_x / 2) + (dx * TILE_SIZE)
-          vy = (@screen_y / 2) + (dy * TILE_SIZE)
+      dx = vx + (20 * Math.sin(@d))
+      dy = vy + (20 * Math.cos(@d))
 
-          cell = @map.cell([x,y])
+      graphics.draw_line(vx,vy,dx,dy)
 
-          if cell then
-            if cell.structure then
-              graphics.set_color(@struct_color)
-            else
-              graphics.set_color(@empty_color)
-            end
-            graphics.fill_rect(vx,vy,TILE_SIZE, TILE_SIZE)
-          end
+      graphics.draw_rect(vx-200, 5, 400, 30)
+      graphics.draw_line(vx, 15, vx, 40)
+
+      # if rd > 2.0 * Math::PI then
+      #   rd -= 2.0 * Math::PI
+      # elsif rd < 0.0 then
+      #   rd += 2.0 * Math::PI
+      # end
+
+      deg = 180 - (@d / Math::PI * 180)
+      if deg >= 360 then
+        deg -= 360
+      elsif deg < 0 then
+        deg += 360
+      end
+      graphics.draw_string(sprintf("%d", deg), vx, 10)
+      # low = ((deg - 50) / 10.0).floor * 10
+      # high = ((deg + 50) / 10.0).floor * 10
+
+      low_fov = @d - @fov / 2.0
+      high_fov = @d + @fov / 2.0
+      lowx = @draw_dist * Math.sin(low_fov)
+      lowy = @draw_dist * Math.cos(low_fov)
+      highx = @draw_dist * Math.sin(high_fov)
+      highy = @draw_dist * Math.cos(high_fov)
+
+      if lowx > highx then
+        holdx = lowx
+        lowx = highx
+        highx = holdx
+        holdy = lowy
+        lowy = highy
+        highy = holdy
+      end
+
+      # xmin = [ @x, lowx, highx ].min
+      # xmax = [ @x, lowx, highx ].max
+      # ymin = [ @y, lowy, highy ].min
+      # ymax = [ @y, lowy, highy ].max
+
+      @objects.each do |obj|
+        # Is this object visible?
+        dx = obj[:x] - @x
+        dy = obj[:y] - @y
+        theta_x = @d - Math.atan(dx / dy)
+        if obj[:x] < @x then
+          theta_x += Math::PI
+        end
+        puts "#{obj.inspect}"
+        puts "theta_x = #{theta_x}"
+
+        if theta_x >= low_fov && theta_x <= high_fov then
+          puts "VISIBLE: #{obj.inspect}"
+
+          px = vx + (@fx * Math.tan(theta_x))
+
+          dh = obj[:h].to_f
+
+          theta_y = Math.atan(dh / dy)
+
+          py = vy - (@fx * Math.tan(theta_y))
+
+          graphics.draw_rect(px-2,py-2,4,4)
         end
       end
 
-      graphics.draw_string("(ESC to exit)", 8, container.height - 30)
+      graphics.draw_string(sprintf("vis: %.2f,%.2f to %.2f,%.2f", lowx, lowy, highx, highy), 8, container.height - 40)
+      graphics.draw_string(sprintf("pos: %.3f,%.3f d: %.3f v: %.3f", @x, @y, @d, @v), 8, container.height - 30)
     end
 
     def init(container, game)
@@ -52,14 +105,57 @@ module Utopia
 
       @empty_color = Color.new(27,38,50,255)
       @struct_color = Color.new(157,157,157,255)
+      @unit_color = Color.new(255,0,0,255)
 
-      @x = @world.map.width / 2
-      @y = @world.map.height / 2
+      @x = @world.map.width / 2.0
+      @y = @world.map.height / 2.0
+      @v = 1.0
+      @d = 0.0
+
+      @fov = 110.0 / 360.0 * (2.0 * Math::PI) # FoV in radians
+
+      @fx = (@screen_x / 2.0) * (Math.tan(@fov / 2.0))
+
+      puts "fx = #{@fx}"
+
+      @objects = [
+                    { :x => 9.0, :y => 9.0, :h => 2.0 },
+                    { :x => 11.0, :y => 13.0, :h => 1.0 }
+                 ]
+
+      @draw_dist = 10.0
     end
 
     def update(container, game, delta)
       input = container.get_input
       container.exit if input.is_key_down(Input::KEY_ESCAPE)
+
+      if input.is_key_down(Input::KEY_EQUALS) then
+        @v += delta / 1000.0
+        puts "V: #{@v}"
+      end
+      if input.is_key_down(Input::KEY_MINUS) then
+        @v -= delta / 1000.0
+        puts "V: #{@v}"
+      end
+
+      if input.is_key_down(Input::KEY_W) then
+        # TODO: Move forward
+        puts [ @x, @y ].inspect
+        @x = @x + (@v * Math.sin(@d) * delta / 1000.0)
+        @y = @y + (@v * Math.cos(@d) * delta / 1000.0)
+        puts [ @x, @y ].inspect
+      end
+      if input.is_key_down(Input::KEY_A) then
+        # Turn left
+        @d += delta / 1000.0 * 2.0
+        puts "D: #{@d}"
+      end
+      if input.is_key_down(Input::KEY_D) then
+        # Turn right
+        @d -= delta / 1000.0 * 2.0
+        puts "D: #{@d}"
+      end
 
       @ui_handler.update(container, delta)
       @world.update(container, delta)

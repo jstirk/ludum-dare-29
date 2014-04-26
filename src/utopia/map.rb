@@ -31,8 +31,8 @@ module Utopia
       x,y=pos
       structure.cell = cell(pos)
       # TODO: Sanity check that all cells are clear and fine to place
-      x.upto(x+structure.width) do |cx|
-        y.upto(y+structure.height) do |cy|
+      x.upto(x+structure.width-1) do |cx|
+        y.upto(y+structure.height-1) do |cy|
           cell([cx,cy]).structure = structure
         end
       end

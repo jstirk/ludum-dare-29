@@ -2,7 +2,7 @@ require 'utopia/structures/base'
 
 module Utopia
   module Structures
-    class Dock < Base
+    class Cantina < Base
 
       def width
         3
