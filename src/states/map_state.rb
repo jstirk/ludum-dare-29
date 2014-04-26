@@ -72,7 +72,7 @@ module Utopia
           p1 = project(obj[:x], obj[:y], 0, vx, vy)
           p2 = project(obj[:x], obj[:y], obj[:h], vx, vy)
 
-          # next if p1[1] < p2[1]
+          # next if p2[1] > p1[1]
 
           # next if p2[0] < 0 || p2[0] > @screen_x || p2[1] < 0 || p2[1] > @screen_y
 
@@ -81,6 +81,9 @@ module Utopia
           graphics.draw_oval(p1[0]-4,p1[1]-2,8,4)
           graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
           graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
+
+          graphics.draw_string(sprintf("%.3f", -(p2[2]-@d)), p2[0], p2[1]-10)
+
         # end
       end
 
@@ -102,11 +105,11 @@ module Utopia
 
       dh = h.to_f - 1.0
 
-      theta_y = Math.atan(dh / dy)
+      theta_y = Math.atan(dh / dy.abs)
 
       py = vy - (@fx * Math.tan(theta_y))
 
-      [px,py]
+      [px,py, theta_x]
     end
 
     def init(container, game)
@@ -138,7 +141,9 @@ module Utopia
       @objects = [
                     { :x => 9.0, :y => 9.0, :h => 2.0, :c => Color.new(255,0,0,255) },
                     { :x => 11.0, :y => 13.0, :h => 1.0, :c => Color.new(0,255,0,255) },
-                    { :x => 10.0, :y => 8.0, :h => 0.5, :c => Color.new(255,255,0,255) }
+                    { :x => 10.0, :y => 8.0, :h => 0.5, :c => Color.new(255,255,0,255) },
+                    { :x => 12.0, :y => 11.0, :h => 1.0, :c => Color.new(255,0,255,255) },
+                    { :x => 12.0, :y => 9.0, :h => 1.0, :c => Color.new(255,255,255,255) }
                  ]
 
       @draw_dist = 10.0
@@ -157,6 +162,11 @@ module Utopia
         puts "V: #{@v}"
       end
 
+      if input.is_key_down(Input::KEY_R) then
+        # Reset position
+        @x = 10.0
+        @y = 10.0
+      end
       if input.is_key_down(Input::KEY_W) then
         # TODO: Move forward
         puts [ @x, @y ].inspect
