@@ -1,1 +1,1 @@
-rvm use jruby@template --create
+rvm use jruby-1.7.10@ld29 --create
