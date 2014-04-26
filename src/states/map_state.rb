@@ -78,7 +78,7 @@ module Utopia
 
           graphics.set_color(obj[:c])
 
-          graphics.draw_oval(p1[0]-2,p1[0]-2,4,4)
+          graphics.draw_oval(p1[0]-4,p1[1]-2,8,4)
           graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
           graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
         # end
@@ -94,9 +94,9 @@ module Utopia
       dx = x - @x
       dy = y - @y
       theta_x = @d - Math.atan(dx / dy)
-      if x < @x then
-        theta_x += Math::PI
-      end
+      # if x < @x then
+      #   theta_x += Math::PI
+      # end
 
       px = vx + (@fx * Math.tan(theta_x))
 
@@ -125,18 +125,20 @@ module Utopia
 
       @x = @world.map.width / 2.0
       @y = @world.map.height / 2.0
-      @v = 1.0
+      @v = 2.0
       @d = 0.0
 
       @fov = 110.0 / 360.0 * (2.0 * Math::PI) # FoV in radians
 
+      # Calculate the distance from eye to the screen for the given FoV
       @fx = (@screen_x / 2.0) * (Math.tan(@fov / 2.0))
 
       puts "fx = #{@fx}"
 
       @objects = [
                     { :x => 9.0, :y => 9.0, :h => 2.0, :c => Color.new(255,0,0,255) },
-                    { :x => 11.0, :y => 13.0, :h => 1.0, :c => Color.new(0,255,0,255) }
+                    { :x => 11.0, :y => 13.0, :h => 1.0, :c => Color.new(0,255,0,255) },
+                    { :x => 10.0, :y => 8.0, :h => 0.5, :c => Color.new(255,255,0,255) }
                  ]
 
       @draw_dist = 10.0
