@@ -15,7 +15,7 @@ java_import org.newdawn.slick.AppGameContainer
 
 require 'states/map_state'
 require 'utopia/world'
-require 'utopia/ui_handler'
+require 'utopia/ui/handler'
 
 module Utopia
   class Game < StateBasedGame
@@ -23,7 +23,7 @@ module Utopia
     attr_reader :world, :ui_handler
 
     def initialize(name)
-      @ui_handler = UIHandler.new
+      @ui_handler = UI::Handler.new
 
       @world = World.new
       @world.ui_handler = @ui_handler
