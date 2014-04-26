@@ -19,8 +19,8 @@ module Utopia
 
       graphics.draw_oval(vx-10,vy-10,20,20)
 
-      dx = vx + (20 * Math.sin(@d))
-      dy = vy + (20 * Math.cos(@d))
+      dx = vx + (20 * Math.cos(@d))
+      dy = vy - (20 * Math.sin(@d))
 
       graphics.draw_line(vx,vy,dx,dy)
 
@@ -33,7 +33,7 @@ module Utopia
       #   rd += 2.0 * Math::PI
       # end
 
-      deg = 180 - (@d / Math::PI * 180)
+      deg = 90 - (@d / Math::PI * 180)
       if deg >= 360 then
         deg -= 360
       elsif deg < 0 then
@@ -78,11 +78,14 @@ module Utopia
 
           graphics.set_color(obj[:c])
 
-          graphics.draw_oval(p1[0]-4,p1[1]-2,8,4)
+          gx = vx + ((obj[:x] - @x) * TILE_SIZE)
+          gy = vy + ((obj[:y] - @y) * TILE_SIZE)
+          graphics.draw_oval(gx-4,gy-4,8,8)
+
           graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
           graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
 
-          graphics.draw_string(sprintf("%.3f", -(p2[2]-@d)), p2[0], p2[1]-10)
+          graphics.draw_string(sprintf("%.3f", p2[2]), p2[0], p2[1]-10)
 
         # end
       end
@@ -96,7 +99,7 @@ module Utopia
     def project(x,y,h, vx, vy)
       dx = x - @x
       dy = y - @y
-      theta_x = @d - Math.atan(dx / dy)
+      theta_x = @d + Math.atan(dy / dx)
       # if x < @x then
       #   theta_x += Math::PI
       # end
@@ -109,7 +112,22 @@ module Utopia
 
       py = vy - (@fx * Math.tan(theta_y))
 
-      [px,py, theta_x]
+      if dx >= 0.0 then
+        base = (3.0/2.0) * Math::PI # 3PI/2r, 180 deg
+      else
+        base = Math::PI / 2.0 # PI/2r, 0 deg
+      end
+
+      if dy >= 0.0 then
+        mult = 1.0
+      else
+        mult = -1.0
+      end
+
+      bearing = base + (mult * -(theta_x - @d))
+      bearing -= 2.0 * Math::PI if bearing > (2.0 * Math::PI)
+
+      [px,py, bearing]
     end
 
     def init(container, game)
@@ -170,15 +188,15 @@ module Utopia
       if input.is_key_down(Input::KEY_W) then
         # TODO: Move forward
         puts [ @x, @y ].inspect
-        @x = @x + (@v * Math.sin(@d) * delta / 1000.0)
-        @y = @y + (@v * Math.cos(@d) * delta / 1000.0)
+        @x = @x + (@v * Math.cos(@d) * delta / 1000.0)
+        @y = @y - (@v * Math.sin(@d) * delta / 1000.0)
         puts [ @x, @y ].inspect
       end
       if input.is_key_down(Input::KEY_S) then
         # TODO: Move backwards
         puts [ @x, @y ].inspect
-        @x = @x + (-@v * Math.sin(@d) * delta / 1000.0)
-        @y = @y + (-@v * Math.cos(@d) * delta / 1000.0)
+        @x = @x + (-@v * Math.cos(@d) * delta / 1000.0)
+        @y = @y - (-@v * Math.sin(@d) * delta / 1000.0)
         puts [ @x, @y ].inspect
       end
       if input.is_key_down(Input::KEY_A) then
