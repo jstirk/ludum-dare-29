@@ -66,32 +66,46 @@ module Utopia
 
       @objects.each do |obj|
         # Is this object visible?
-        dx = obj[:x] - @x
-        dy = obj[:y] - @y
-        theta_x = @d - Math.atan(dx / dy)
-        if obj[:x] < @x then
-          theta_x += Math::PI
-        end
-        puts "#{obj.inspect}"
-        puts "theta_x = #{theta_x}"
+        # if theta_x >= low_fov && theta_x <= high_fov then
+          # puts "VISIBLE: #{obj.inspect}"
 
-        if theta_x >= low_fov && theta_x <= high_fov then
-          puts "VISIBLE: #{obj.inspect}"
+          p1 = project(obj[:x], obj[:y], 0, vx, vy)
+          p2 = project(obj[:x], obj[:y], obj[:h], vx, vy)
 
-          px = vx + (@fx * Math.tan(theta_x))
+          # next if p1[1] < p2[1]
 
-          dh = obj[:h].to_f
+          # next if p2[0] < 0 || p2[0] > @screen_x || p2[1] < 0 || p2[1] > @screen_y
 
-          theta_y = Math.atan(dh / dy)
+          graphics.set_color(obj[:c])
 
-          py = vy - (@fx * Math.tan(theta_y))
-
-          graphics.draw_rect(px-2,py-2,4,4)
-        end
+          graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
+          graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
+        # end
       end
+
+      graphics.set_color(@text_color)
 
       graphics.draw_string(sprintf("vis: %.2f,%.2f to %.2f,%.2f", lowx, lowy, highx, highy), 8, container.height - 40)
       graphics.draw_string(sprintf("pos: %.3f,%.3f d: %.3f v: %.3f", @x, @y, @d, @v), 8, container.height - 30)
+    end
+
+    def project(x,y,h, vx, vy)
+      dx = x - @x
+      dy = y - @y
+      theta_x = @d - Math.atan(dx / dy)
+      if x < @x then
+        theta_x += Math::PI
+      end
+
+      px = vx + (@fx * Math.tan(theta_x))
+
+      dh = h.to_f - 1.0
+
+      theta_y = Math.atan(dh / dy)
+
+      py = vy - (@fx * Math.tan(theta_y))
+
+      [px,py]
     end
 
     def init(container, game)
@@ -106,6 +120,7 @@ module Utopia
       @empty_color = Color.new(27,38,50,255)
       @struct_color = Color.new(157,157,157,255)
       @unit_color = Color.new(255,0,0,255)
+      @text_color = Color.new(255,255,255,255)
 
       @x = @world.map.width / 2.0
       @y = @world.map.height / 2.0
@@ -119,8 +134,8 @@ module Utopia
       puts "fx = #{@fx}"
 
       @objects = [
-                    { :x => 9.0, :y => 9.0, :h => 2.0 },
-                    { :x => 11.0, :y => 13.0, :h => 1.0 }
+                    { :x => 9.0, :y => 9.0, :h => 2.0, :c => Color.new(255,0,0,255) },
+                    { :x => 11.0, :y => 13.0, :h => 1.0, :c => Color.new(0,255,0,255) }
                  ]
 
       @draw_dist = 10.0
@@ -144,6 +159,13 @@ module Utopia
         puts [ @x, @y ].inspect
         @x = @x + (@v * Math.sin(@d) * delta / 1000.0)
         @y = @y + (@v * Math.cos(@d) * delta / 1000.0)
+        puts [ @x, @y ].inspect
+      end
+      if input.is_key_down(Input::KEY_S) then
+        # TODO: Move backwards
+        puts [ @x, @y ].inspect
+        @x = @x + (-@v * Math.sin(@d) * delta / 1000.0)
+        @y = @y + (-@v * Math.cos(@d) * delta / 1000.0)
         puts [ @x, @y ].inspect
       end
       if input.is_key_down(Input::KEY_A) then
