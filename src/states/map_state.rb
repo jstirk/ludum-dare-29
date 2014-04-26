@@ -64,29 +64,6 @@ module Utopia
         deg += 360
       end
       graphics.draw_string(sprintf("%d", deg), vx, 10)
-      # low = ((deg - 50) / 10.0).floor * 10
-      # high = ((deg + 50) / 10.0).floor * 10
-
-      low_fov = @d - @fov / 2.0
-      high_fov = @d + @fov / 2.0
-      lowx = @draw_dist * Math.sin(low_fov)
-      lowy = @draw_dist * Math.cos(low_fov)
-      highx = @draw_dist * Math.sin(high_fov)
-      highy = @draw_dist * Math.cos(high_fov)
-
-      if lowx > highx then
-        holdx = lowx
-        lowx = highx
-        highx = holdx
-        holdy = lowy
-        lowy = highy
-        highy = holdy
-      end
-
-      # xmin = [ @x, lowx, highx ].min
-      # xmax = [ @x, lowx, highx ].max
-      # ymin = [ @y, lowy, highy ].min
-      # ymax = [ @y, lowy, highy ].max
 
       @objects.each do |obj|
         # Is this object visible?
@@ -101,8 +78,11 @@ module Utopia
           # next if p2[0] < 0 || p2[0] > @screen_x || p2[1] < 0 || p2[1] > @screen_y
 
           bearing = p2[2]
-
-          graphics.set_color(obj[:c])
+          if in_fov(bearing, minf, maxf) then
+            graphics.set_color(obj[:c])
+          else
+            graphics.set_color(@fov_color)
+          end
 
           gx = vx + ((obj[:x] - @x) * TILE_SIZE)
           gy = vy + ((obj[:y] - @y) * TILE_SIZE)
@@ -118,8 +98,20 @@ module Utopia
 
       graphics.set_color(@text_color)
 
-      graphics.draw_string(sprintf("vis: %.2f,%.2f to %.2f,%.2f", lowx, lowy, highx, highy), 8, container.height - 40)
+      # graphics.draw_string(sprintf("vis: %.2f,%.2f to %.2f,%.2f", lowx, lowy, highx, highy), 8, container.height - 40)
       graphics.draw_string(sprintf("pos: %.3f,%.3f d: %.3f v: %.3f", @x, @y, @d, @v), 8, container.height - 30)
+    end
+
+    def in_fov(bearing, f1, f2)
+      min = [ f1, f2 ].min
+      max = [ f1, f2 ].max
+      if (f1 - f2).abs < Math::PI then
+        # Cohesive segment - simple test
+        (bearing > min && bearing < max)
+      else
+        # Split about 0 - test two sectors
+        (bearing < min) || (bearing > max)
+      end
     end
 
     def project(x,y,h, vx, vy)
