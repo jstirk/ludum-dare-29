@@ -1,4 +1,4 @@
-module Template
+module Utopia
   class UIHandler
 
     TEXT_SHOW_SECONDS = 10

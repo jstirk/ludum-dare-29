@@ -1,4 +1,4 @@
-module Template
+module Utopia
   class World
     attr_reader :player
     attr_accessor :ui_handler

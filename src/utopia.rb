@@ -14,10 +14,10 @@ java_import org.newdawn.slick.SlickException
 java_import org.newdawn.slick.AppGameContainer
 
 require 'states/map_state'
-require 'template/world'
-require 'template/ui_handler'
+require 'utopia/world'
+require 'utopia/ui_handler'
 
-module Template
+module Utopia
   class Game < StateBasedGame
 
     attr_reader :world, :ui_handler
@@ -49,6 +49,6 @@ WIDTH = 1000
 HEIGHT = 700
 FULLSCREEN = false
 
-app = AppGameContainer.new(Template::Game.new('Template'))
+app = AppGameContainer.new(Utopia::Game.new('Utopia'))
 app.set_display_mode(WIDTH, HEIGHT, FULLSCREEN)
 app.start
