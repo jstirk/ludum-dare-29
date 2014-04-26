@@ -78,6 +78,7 @@ module Utopia
 
           graphics.set_color(obj[:c])
 
+          graphics.draw_oval(p1[0]-2,p1[0]-2,4,4)
           graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
           graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
         # end
