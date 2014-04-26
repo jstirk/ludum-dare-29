@@ -13,15 +13,39 @@ module Utopia
       1
     end
 
+    def normalise_radians(rad)
+      ret = rad
+      ret -= 2.0 * Math::PI if ret > (2.0 * Math::PI)
+      ret += 2.0 * Math::PI if ret < 0.0
+      ret
+    end
+
     def render(container, game, graphics)
       vx = @screen_x / 2
       vy = @screen_y / 2
+
+      graphics.set_color(@fov_color)
+      minf = normalise_radians(@d - @fov / 2.0)
+      maxf = normalise_radians(@d + @fov / 2.0)
+      dx = vx + (100 * Math.cos(minf))
+      dy = vy - (100 * Math.sin(minf))
+      tx = vx + (110 * Math.cos(minf))
+      ty = vy - (110 * Math.sin(minf))
+      graphics.draw_line(vx,vy,dx,dy)
+      graphics.draw_string(sprintf("%.2f", minf), tx, ty)
+      dx = vx + (100 * Math.cos(maxf))
+      dy = vy - (100 * Math.sin(maxf))
+      tx = vx + (110 * Math.cos(maxf))
+      ty = vy - (110 * Math.sin(maxf))
+      graphics.draw_line(vx,vy,dx,dy)
+      graphics.draw_string(sprintf("%.2f", maxf), tx, ty)
+
+      graphics.set_color(@text_color)
 
       graphics.draw_oval(vx-10,vy-10,20,20)
 
       dx = vx + (20 * Math.cos(@d))
       dy = vy - (20 * Math.sin(@d))
-
       graphics.draw_line(vx,vy,dx,dy)
 
       graphics.draw_rect(vx-200, 5, 400, 30)
@@ -76,6 +100,8 @@ module Utopia
 
           # next if p2[0] < 0 || p2[0] > @screen_x || p2[1] < 0 || p2[1] > @screen_y
 
+          bearing = p2[2]
+
           graphics.set_color(obj[:c])
 
           gx = vx + ((obj[:x] - @x) * TILE_SIZE)
@@ -113,19 +139,20 @@ module Utopia
       py = vy - (@fx * Math.tan(theta_y))
 
       if dx >= 0.0 then
-        base = (3.0/2.0) * Math::PI # 3PI/2r, 180 deg
+        # base = (3.0/2.0) * Math::PI # 3PI/2r, 180 deg
+        base = 0.0 # 0r, 90 deg
       else
-        base = Math::PI / 2.0 # PI/2r, 0 deg
+        # base = Math::PI / 2.0 # PI/2r, 0 deg
+        base = Math::PI # PIr, 270 deg
       end
 
       if dy >= 0.0 then
         mult = 1.0
       else
-        mult = -1.0
+        mult = 1.0
       end
 
-      bearing = base + (mult * -(theta_x - @d))
-      bearing -= 2.0 * Math::PI if bearing > (2.0 * Math::PI)
+      bearing = normalise_radians(base + (mult * -(theta_x - @d)))
 
       [px,py, bearing]
     end
@@ -143,13 +170,15 @@ module Utopia
       @struct_color = Color.new(157,157,157,255)
       @unit_color = Color.new(255,0,0,255)
       @text_color = Color.new(255,255,255,255)
+      @fov_color = Color.new(255,255,255,64)
 
       @x = @world.map.width / 2.0
       @y = @world.map.height / 2.0
       @v = 2.0
       @d = 0.0
 
-      @fov = 110.0 / 360.0 * (2.0 * Math::PI) # FoV in radians
+      # @fov = 110.0 / 360.0 * (1.0 * Math::PI) # FoV in radians
+      @fov = 110.0 * Math::PI / 180.0
 
       # Calculate the distance from eye to the screen for the given FoV
       @fx = (@screen_x / 2.0) * (Math.tan(@fov / 2.0))
@@ -173,11 +202,11 @@ module Utopia
 
       if input.is_key_down(Input::KEY_EQUALS) then
         @v += delta / 1000.0
-        puts "V: #{@v}"
+        # puts "V: #{@v}"
       end
       if input.is_key_down(Input::KEY_MINUS) then
         @v -= delta / 1000.0
-        puts "V: #{@v}"
+        # puts "V: #{@v}"
       end
 
       if input.is_key_down(Input::KEY_R) then
@@ -187,27 +216,33 @@ module Utopia
       end
       if input.is_key_down(Input::KEY_W) then
         # TODO: Move forward
-        puts [ @x, @y ].inspect
+        # puts [ @x, @y ].inspect
         @x = @x + (@v * Math.cos(@d) * delta / 1000.0)
         @y = @y - (@v * Math.sin(@d) * delta / 1000.0)
-        puts [ @x, @y ].inspect
+        # puts [ @x, @y ].inspect
       end
       if input.is_key_down(Input::KEY_S) then
         # TODO: Move backwards
-        puts [ @x, @y ].inspect
+        # puts [ @x, @y ].inspect
         @x = @x + (-@v * Math.cos(@d) * delta / 1000.0)
         @y = @y - (-@v * Math.sin(@d) * delta / 1000.0)
-        puts [ @x, @y ].inspect
+        # puts [ @x, @y ].inspect
       end
       if input.is_key_down(Input::KEY_A) then
         # Turn left
         @d += delta / 1000.0 * 2.0
-        puts "D: #{@d}"
+        if @d > (2.0 * Math::PI) then
+          @d -= (2.0 * Math::PI)
+        end
+        # puts "D: #{@d}"
       end
       if input.is_key_down(Input::KEY_D) then
         # Turn right
         @d -= delta / 1000.0 * 2.0
-        puts "D: #{@d}"
+        if @d < 0.0 then
+          @d += (2.0 * Math::PI)
+        end
+        # puts "D: #{@d}"
       end
 
       @ui_handler.update(container, delta)
