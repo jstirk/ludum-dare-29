@@ -66,39 +66,66 @@ module Utopia
       graphics.draw_string(sprintf("%d", deg), vx, 10)
 
       @objects.each do |obj|
-        # Is this object visible?
-        # if theta_x >= low_fov && theta_x <= high_fov then
-          # puts "VISIBLE: #{obj.inspect}"
+        p1 = project(obj[:x], obj[:y], 0, vx, vy)
 
-          p1 = project(obj[:x], obj[:y], 0, vx, vy)
+        bearing = p1[2]
+        distance = p1[3]
+        visible = in_fov(bearing, minf, maxf)
+        if visible then
+          obj[:c].a = (@view_distance - distance) / @view_distance
+          graphics.set_color(obj[:c])
+        else
+          graphics.set_color(@fov_color)
+        end
+
+        gx = vx + ((obj[:x] - @x) * TILE_SIZE)
+        gy = vy + ((obj[:y] - @y) * TILE_SIZE)
+        graphics.draw_oval(gx-4,gy-4,8,8)
+
+        next unless visible
+
+        case obj[:type]
+        when :pool
+          r = obj[:r]
+          v1 = project(obj[:x] - r, obj[:y] - r,0, vx,vy)
+          v2 = project(obj[:x] + r, obj[:y] - r,0, vx,vy)
+          v3 = project(obj[:x] + r, obj[:y] + r,0, vx,vy)
+          v4 = project(obj[:x] - r, obj[:y] + r,0, vx,vy)
+
+          graphics.draw_line(v1[0], v1[1], v2[0], v2[1])
+          graphics.draw_line(v2[0], v2[1], v3[0], v3[1])
+          graphics.draw_line(v3[0], v3[1], v4[0], v4[1])
+          graphics.draw_line(v4[0], v4[1], v1[0], v1[1])
+        when :col
+          r = 0.5
+          f1 = project(obj[:x] - r, obj[:y] - r,0, vx,vy)
+          f2 = project(obj[:x] + r, obj[:y] - r,0, vx,vy)
+          f3 = project(obj[:x] + r, obj[:y] + r,0, vx,vy)
+          f4 = project(obj[:x] - r, obj[:y] + r,0, vx,vy)
+          graphics.draw_line(f1[0], f1[1], f2[0], f2[1])
+          graphics.draw_line(f2[0], f2[1], f3[0], f3[1])
+          graphics.draw_line(f3[0], f3[1], f4[0], f4[1])
+          graphics.draw_line(f4[0], f4[1], f1[0], f1[1])
+          c1 = project(obj[:x] - r, obj[:y] - r,10, vx,vy)
+          c2 = project(obj[:x] + r, obj[:y] - r,10, vx,vy)
+          c3 = project(obj[:x] + r, obj[:y] + r,10, vx,vy)
+          c4 = project(obj[:x] - r, obj[:y] + r,10, vx,vy)
+          graphics.draw_line(c1[0], c1[1], c2[0], c2[1])
+          graphics.draw_line(c2[0], c2[1], c3[0], c3[1])
+          graphics.draw_line(c3[0], c3[1], c4[0], c4[1])
+          graphics.draw_line(c4[0], c4[1], c1[0], c1[1])
+
+          graphics.draw_line(f1[0], f1[1], c1[0], c1[1])
+          graphics.draw_line(f2[0], f2[1], c2[0], c2[1])
+          graphics.draw_line(f3[0], f3[1], c3[0], c3[1])
+          graphics.draw_line(c4[0], f4[1], c4[0], c4[1])
+        else
           p2 = project(obj[:x], obj[:y], obj[:h], vx, vy)
-
-          # next if p2[1] > p1[1]
-
-          # next if p2[0] < 0 || p2[0] > @screen_x || p2[1] < 0 || p2[1] > @screen_y
-
-          bearing = p2[2]
-          distance = p2[3]
-          visible = in_fov(bearing, minf, maxf)
-          if visible then
-            obj[:c].a = (@view_distance - distance) / @view_distance
-            graphics.set_color(obj[:c])
-          else
-            graphics.set_color(@fov_color)
-          end
-
-          gx = vx + ((obj[:x] - @x) * TILE_SIZE)
-          gy = vy + ((obj[:y] - @y) * TILE_SIZE)
-          graphics.draw_oval(gx-4,gy-4,8,8)
-
-          next unless visible
 
           graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
           graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
-
           graphics.draw_string(sprintf("%.2fm @ %.3f", distance, bearing), p2[0], p2[1]-10)
-
-        # end
+        end
       end
 
       graphics.set_color(@text_color)
@@ -183,11 +210,12 @@ module Utopia
       puts "fx = #{@fx}"
 
       @objects = [
-                    { :x => 9.0, :y => 9.0, :h => 2.0, :c => Color.new(255,0,0,255) },
+                    { :x => 9.0, :y => 9.0, :h => 2.0, :c => Color.new(255,0,0,255), :type => :col },
                     { :x => 11.0, :y => 13.0, :h => 1.0, :c => Color.new(0,255,0,255) },
                     { :x => 10.0, :y => 8.0, :h => 0.5, :c => Color.new(255,255,0,255) },
                     { :x => 12.0, :y => 11.0, :h => 1.0, :c => Color.new(255,0,255,255) },
-                    { :x => 12.0, :y => 9.0, :h => 1.0, :c => Color.new(255,255,255,255) }
+                    { :x => 12.0, :y => 9.0, :h => 1.0, :c => Color.new(255,255,255,255) },
+                    { :x => 9.0, :y => 7.0, :c => Color.new(0,0,255,255), :r => 0.5, :type => :pool },
                  ]
 
       @draw_dist = 10.0
@@ -199,11 +227,9 @@ module Utopia
 
       if input.is_key_down(Input::KEY_EQUALS) then
         @v += delta / 1000.0
-        # puts "V: #{@v}"
       end
       if input.is_key_down(Input::KEY_MINUS) then
         @v -= delta / 1000.0
-        # puts "V: #{@v}"
       end
 
       if input.is_key_down(Input::KEY_R) then
@@ -211,35 +237,29 @@ module Utopia
         @x = 10.0
         @y = 10.0
       end
-      if input.is_key_down(Input::KEY_W) then
-        # TODO: Move forward
-        # puts [ @x, @y ].inspect
+      if input.is_key_down(Input::KEY_W) || input.is_key_down(Input::KEY_UP) then
+        # Move forward
         @x = @x + (@v * Math.cos(@d) * delta / 1000.0)
         @y = @y - (@v * Math.sin(@d) * delta / 1000.0)
-        # puts [ @x, @y ].inspect
       end
-      if input.is_key_down(Input::KEY_S) then
-        # TODO: Move backwards
-        # puts [ @x, @y ].inspect
+      if input.is_key_down(Input::KEY_S) || input.is_key_down(Input::KEY_DOWN) then
+        # Move backwards
         @x = @x + (-@v * Math.cos(@d) * delta / 1000.0)
         @y = @y - (-@v * Math.sin(@d) * delta / 1000.0)
-        # puts [ @x, @y ].inspect
       end
-      if input.is_key_down(Input::KEY_A) then
+      if input.is_key_down(Input::KEY_A) || input.is_key_down(Input::KEY_LEFT) then
         # Turn left
         @d += delta / 1000.0 * 2.0
         if @d > (2.0 * Math::PI) then
           @d -= (2.0 * Math::PI)
         end
-        # puts "D: #{@d}"
       end
-      if input.is_key_down(Input::KEY_D) then
+      if input.is_key_down(Input::KEY_D) || input.is_key_down(Input::KEY_RIGHT) then
         # Turn right
         @d -= delta / 1000.0 * 2.0
         if @d < 0.0 then
           @d += (2.0 * Math::PI)
         end
-        # puts "D: #{@d}"
       end
 
       @ui_handler.update(container, delta)
