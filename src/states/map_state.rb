@@ -196,7 +196,7 @@ module Utopia
       @view_distance = 10.0
 
       # @fov = 110.0 / 360.0 * (1.0 * Math::PI) # FoV in radians
-      @fov = 110.0 * Math::PI / 180.0
+      @fov = 90.0 * Math::PI / 180.0
 
       # Calculate the distance from eye to the screen for the given FoV
       @fx = (@screen_x / 2.0) / (Math.tan(@fov / 2.0))
