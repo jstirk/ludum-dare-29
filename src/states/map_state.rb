@@ -51,12 +51,6 @@ module Utopia
       graphics.draw_rect(vx-200, 5, 400, 30)
       graphics.draw_line(vx, 15, vx, 40)
 
-      # if rd > 2.0 * Math::PI then
-      #   rd -= 2.0 * Math::PI
-      # elsif rd < 0.0 then
-      #   rd += 2.0 * Math::PI
-      # end
-
       deg = 90 - (@d / Math::PI * 180)
       if deg >= 360 then
         deg -= 360
@@ -130,7 +124,6 @@ module Utopia
 
       graphics.set_color(@text_color)
 
-      # graphics.draw_string(sprintf("vis: %.2f,%.2f to %.2f,%.2f", lowx, lowy, highx, highy), 8, container.height - 40)
       graphics.draw_string(sprintf("pos: %.3f,%.3f d: %.3f v: %.3f", @x, @y, @d, @v), 8, container.height - 30)
     end
 
@@ -150,9 +143,6 @@ module Utopia
       dx = x - @x
       dy = y - @y
       theta_x = @d + Math.atan(dy / dx)
-      # if x < @x then
-      #   theta_x += Math::PI
-      # end
 
       distance = Math.sqrt((dx ** 2) + (dy ** 2))
 
