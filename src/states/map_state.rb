@@ -4,6 +4,14 @@ java_import org.newdawn.slick.PackedSpriteSheet
 java_import org.newdawn.slick.fills.GradientFill
 java_import org.newdawn.slick.geom.Rectangle
 
+
+
+
+import java.io.IOException
+import java.nio.FloatBuffer
+import java.nio.IntBuffer
+import org.lwjgl.BufferUtils
+
 module Utopia
   class MapState < BasicGameState
 
@@ -231,8 +239,10 @@ module Utopia
 
       @sounds = [
                     # { :x => 10.0, :y => 10.0, :sample => :sinister, :r => 8.0, :t => 2000.0 },
-                    { :x => 0.0, :y => 0.0, :sample => :drip2, :r => 10.0, :rand => 0.001, :t => 1000.0 },
-                    { :x => 9.0, :y => 7.0, :sample => :drip, :r => 10.0, :rand => 0.002, :t => 1000.0 },
+                    { :x => 0.0, :y => 0.0, :sample => :rdrip3, :r => 10.0, :rand => 0.004, :t => 400.0 },
+                    { :x => 0.0, :y => 0.0, :sample => :rdrip2, :r => 10.0, :rand => 0.004, :t => 400.0 },
+                    { :x => 0.0, :y => 0.0, :sample => :rdrip1, :r => 10.0, :rand => 0.004, :t => 400.0 },
+                    { :x => 9.0, :y => 7.0, :sample => :rdrip1, :r => 10.0, :rand => 0.002, :t => 1000.0 },
       ]
 
       @playing = {}
@@ -241,6 +251,8 @@ module Utopia
 
       @vx = @screen_x / 2
       @vy = @screen_y / 2
+
+      @move_cooldown = 0.0
     end
 
     def update(container, game, delta)
@@ -258,18 +270,21 @@ module Utopia
         # Reset position
         @x = 10.0
         @y = 10.0
+        @moved = true
       end
       if input.is_key_down(Input::KEY_W) || input.is_key_down(Input::KEY_UP) then
         # Move forward
         @x = @x + (@v * Math.cos(@d) * delta / 1000.0)
         @y = @y - (@v * Math.sin(@d) * delta / 1000.0)
-        @ui_handler.sound.play(:step, 0.2, 0)
+        # @ui_handler.sound.play(:step, 0.2, 0)
+        @moved = true
       end
       if input.is_key_down(Input::KEY_S) || input.is_key_down(Input::KEY_DOWN) then
         # Move backwards
         @x = @x + (-@v * Math.cos(@d) * delta / 1000.0)
         @y = @y - (-@v * Math.sin(@d) * delta / 1000.0)
-        @ui_handler.sound.play(:step, 0.2, 0)
+        # @ui_handler.sound.play(:step, 0.2, 0)
+        @moved = true
       end
       if input.is_key_down(Input::KEY_A) || input.is_key_down(Input::KEY_LEFT) then
         # Turn left
@@ -277,6 +292,7 @@ module Utopia
         if @d > (2.0 * Math::PI) then
           @d -= (2.0 * Math::PI)
         end
+        @moved = true
       end
       if input.is_key_down(Input::KEY_D) || input.is_key_down(Input::KEY_RIGHT) then
         # Turn right
@@ -284,7 +300,10 @@ module Utopia
         if @d < 0.0 then
           @d += (2.0 * Math::PI)
         end
+        @moved = true
       end
+
+      @move_cooldown -= delta
 
       @sounds.each do |sound|
         p1 = project(sound[:x], sound[:y], 0)
@@ -292,30 +311,40 @@ module Utopia
         d = p1[3]
 
         if d <= sound[:r] then
+          i = (sound[:r] - d) / sound[:r]
+
           if sound[:timer].to_f <= 0.0 then
             if Kernel::rand <= (sound[:rand] || 1.0) then
-
-              # stheta = Math.atan(sdx / sdy)
-              # srx = Math.sin(stheta)
-              # sry = Math.cos(stheta)
-
-              # x1 = sdy / Math.tan(@d)
-              # h = sdy / Math.sin(@d)
-              # alpha = Math.atan((sdx - x1) / h)
-              # beta = @d - alpha
-
-              srx = 1.0
-
               sbearing = p1[2]
               db = @d - sbearing
               srx = Math.sin(db)
 
               sound[:timer] = sound[:t]
-              i = (sound[:r] - d) / sound[:r]
-              @ui_handler.sound.play(sound[:sample], (sound[:vol] || 1.0) * i, srx)
+              idx = @ui_handler.sound.play(sound[:sample], (sound[:vol] || 1.0) * i, srx)
+              puts "Playing: #{idx.inspect}"
+              sound[:idx] = idx
             end
           else
+            if @moved then
+              if @move_cooldown.to_f <= 0.0 then
+                @move_cooldown = 200.0
+                sbearing = p1[2]
+                db = @d - sbearing
+                srx = Math.sin(db)
+
+                # pos = BufferUtils.createFloatBuffer(4).put([ srx.to_f, 0.0, i ].to_java(Java::float))
+                # puts "#{sound[:sample]} @ #{i} = #{srx.inspect}"
+
+                idx = sound[:idx]
+                # AL10.alSourcef(idx, AL10::AL_GAIN, (sound[:vol] || 1.0) * i)
+                # AL10.alSourcef(idx, AL10::AL_PITCH, Kernel::rand)
+                # AL10.alSource(idx, AL10::AL_POSITION, pos)
+                @moved = false
+              end
+            end
+
             sound[:timer] -= delta
+            sound[:idx] = nil if sound[:timer] < 0.0
           end
         end
 

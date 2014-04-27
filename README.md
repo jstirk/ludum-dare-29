@@ -18,3 +18,13 @@ Building .app and .exe :
 
 Building OSX app:
 `rake rawr:clean rawr:jar rawr:bundle:app`
+
+## Sounds
+
+Using sounds from freesound.org :
+
+http://www.freesound.org/people/billy_magnum/sounds/23163/
+http://www.freesound.org/people/acclivity/sounds/25879/
+http://www.freesound.org/people/junggle/sounds/30341/
+http://www.freesound.org/people/junggle/sounds/30342/
+http://www.freesound.org/people/harpoyume/sounds/86069/

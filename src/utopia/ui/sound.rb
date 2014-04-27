@@ -3,13 +3,16 @@ import org.newdawn.slick.openal.AudioLoader
 import org.newdawn.slick.util.ResourceLoader
 import org.newdawn.slick.openal.SoundStore
 
+import org.lwjgl.openal.AL;
+import org.lwjgl.openal.AL10;
+
 module Utopia
   module UI
     class Sound
 
       def initialize
         @sounds = {}
-        %w( drip drip2 happier sad shudder sinister soft1 step ).each do |sound|
+        %w( rdrip1 rdrip2 rdrip3 step goal ).each do |sound|
           @sounds[sound.intern] = AudioLoader.getAudio("WAV", ResourceLoader.getResourceAsStream("data/sounds/#{sound}.wav"))
         end
 
@@ -38,11 +41,13 @@ module Utopia
           if @repeat[sound] <= 0.0 then
             @repeat[sound] = @duration[sound]
           else
-            return
+            return nil
           end
         end
 
-        @sounds[sound].play_as_sound_effect(1.0, vol * @vols[sound], false, x, 1.0, 0.0) unless @sounds[sound].nil?
+        i = @sounds[sound].play_as_sound_effect(1.0, vol * @vols[sound], false, x, 0.0, 0.0) unless @sounds[sound].nil?
+        puts "GOT: #{i.inspect}"
+        i
       end
 
     end
