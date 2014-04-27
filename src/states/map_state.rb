@@ -78,7 +78,10 @@ module Utopia
           # next if p2[0] < 0 || p2[0] > @screen_x || p2[1] < 0 || p2[1] > @screen_y
 
           bearing = p2[2]
-          if in_fov(bearing, minf, maxf) then
+          distance = p2[3]
+          visible = in_fov(bearing, minf, maxf)
+          if visible then
+            obj[:c].a = (@view_distance - distance) / @view_distance
             graphics.set_color(obj[:c])
           else
             graphics.set_color(@fov_color)
@@ -88,10 +91,12 @@ module Utopia
           gy = vy + ((obj[:y] - @y) * TILE_SIZE)
           graphics.draw_oval(gx-4,gy-4,8,8)
 
+          next unless visible
+
           graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
           graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
 
-          graphics.draw_string(sprintf("%.3f", p2[2]), p2[0], p2[1]-10)
+          graphics.draw_string(sprintf("%.2fm @ %.3f", distance, bearing), p2[0], p2[1]-10)
 
         # end
       end
@@ -131,10 +136,8 @@ module Utopia
       py = vy - (@fx * Math.tan(theta_y))
 
       if dx >= 0.0 then
-        # base = (3.0/2.0) * Math::PI # 3PI/2r, 180 deg
         base = 0.0 # 0r, 90 deg
       else
-        # base = Math::PI / 2.0 # PI/2r, 0 deg
         base = Math::PI # PIr, 270 deg
       end
 
@@ -145,8 +148,9 @@ module Utopia
       end
 
       bearing = normalise_radians(base + (mult * -(theta_x - @d)))
+      distance = Math.sqrt((dx ** 2) + (dy ** 2))
 
-      [px,py, bearing]
+      [px,py, bearing, distance]
     end
 
     def init(container, game)
@@ -168,6 +172,7 @@ module Utopia
       @y = @world.map.height / 2.0
       @v = 2.0
       @d = 0.0
+      @view_distance = 10.0
 
       # @fov = 110.0 / 360.0 * (1.0 * Math::PI) # FoV in radians
       @fov = 110.0 * Math::PI / 180.0
