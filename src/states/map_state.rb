@@ -76,6 +76,24 @@ module Utopia
         next unless visible
 
         case obj[:type]
+        when :stalagmite
+          r = 0.15
+          h = obj[:h]
+          f1 = project(obj[:x] - r, obj[:y] - r,0)
+          f2 = project(obj[:x] + r, obj[:y] - r,0)
+          f3 = project(obj[:x] + r, obj[:y] + r,0)
+          f4 = project(obj[:x] - r, obj[:y] + r,0)
+          f5 = project(obj[:x], obj[:y], h)
+
+          graphics.draw_line(f1[0], f1[1], f2[0], f2[1])
+          graphics.draw_line(f2[0], f2[1], f3[0], f3[1])
+          graphics.draw_line(f3[0], f3[1], f4[0], f4[1])
+          graphics.draw_line(f4[0], f4[1], f1[0], f1[1])
+
+          graphics.draw_line(f1[0], f1[1], f5[0], f5[1])
+          graphics.draw_line(f2[0], f2[1], f5[0], f5[1])
+          graphics.draw_line(f3[0], f3[1], f5[0], f5[1])
+          graphics.draw_line(f4[0], f4[1], f5[0], f5[1])
         when :col
           r = 0.5
           h = obj[:h]
@@ -202,7 +220,7 @@ module Utopia
 
       @objects = [
                     { :x => 9.0, :y => 9.0, :h => 5.0, :c => Color.new(255,0,0,255), :type => :col },
-                    { :x => 11.0, :y => 13.0, :h => 1.0, :c => Color.new(0,255,0,255) },
+                    { :x => 11.0, :y => 13.0, :h => 1.0, :c => Color.new(0,255,0,255), :type => :stalagmite },
                     { :x => 10.0, :y => 8.0, :h => 0.5, :c => Color.new(255,255,0,255) },
                     { :x => 12.0, :y => 11.0, :h => 1.0, :c => Color.new(255,0,255,255) },
                     { :x => 12.0, :y => 9.0, :h => 1.0, :c => Color.new(255,255,255,255) },
