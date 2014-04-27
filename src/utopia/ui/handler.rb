@@ -1,4 +1,5 @@
 require 'utopia/ui/sprites'
+require 'utopia/ui/sound'
 
 module Utopia
   module UI
@@ -8,9 +9,12 @@ module Utopia
 
       attr_reader :text
 
+      attr_reader :sound
+
       def initialize
         @text = []
         @sprites = UI::Sprites.new
+        @sound = UI::Sound.new
       end
 
       def update(container, delta)
@@ -18,6 +22,7 @@ module Utopia
           text[:expires] -= delta
           return text unless text[:expires] <= 0.0
         }.compact
+        @sound.update(delta)
       end
 
       def show_text(pos, content)
