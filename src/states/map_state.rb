@@ -79,19 +79,9 @@ module Utopia
         next unless visible
 
         case obj[:type]
-        when :pool
-          r = obj[:r]
-          v1 = project(obj[:x] - r, obj[:y] - r,0, vx,vy)
-          v2 = project(obj[:x] + r, obj[:y] - r,0, vx,vy)
-          v3 = project(obj[:x] + r, obj[:y] + r,0, vx,vy)
-          v4 = project(obj[:x] - r, obj[:y] + r,0, vx,vy)
-
-          graphics.draw_line(v1[0], v1[1], v2[0], v2[1])
-          graphics.draw_line(v2[0], v2[1], v3[0], v3[1])
-          graphics.draw_line(v3[0], v3[1], v4[0], v4[1])
-          graphics.draw_line(v4[0], v4[1], v1[0], v1[1])
         when :col
           r = 0.5
+          h = obj[:h]
           f1 = project(obj[:x] - r, obj[:y] - r,0, vx,vy)
           f2 = project(obj[:x] + r, obj[:y] - r,0, vx,vy)
           f3 = project(obj[:x] + r, obj[:y] + r,0, vx,vy)
@@ -100,10 +90,10 @@ module Utopia
           graphics.draw_line(f2[0], f2[1], f3[0], f3[1])
           graphics.draw_line(f3[0], f3[1], f4[0], f4[1])
           graphics.draw_line(f4[0], f4[1], f1[0], f1[1])
-          c1 = project(obj[:x] - r, obj[:y] - r,10, vx,vy)
-          c2 = project(obj[:x] + r, obj[:y] - r,10, vx,vy)
-          c3 = project(obj[:x] + r, obj[:y] + r,10, vx,vy)
-          c4 = project(obj[:x] - r, obj[:y] + r,10, vx,vy)
+          c1 = project(obj[:x] - r, obj[:y] - r,h, vx,vy)
+          c2 = project(obj[:x] + r, obj[:y] - r,h, vx,vy)
+          c3 = project(obj[:x] + r, obj[:y] + r,h, vx,vy)
+          c4 = project(obj[:x] - r, obj[:y] + r,h, vx,vy)
           graphics.draw_line(c1[0], c1[1], c2[0], c2[1])
           graphics.draw_line(c2[0], c2[1], c3[0], c3[1])
           graphics.draw_line(c3[0], c3[1], c4[0], c4[1])
@@ -114,11 +104,24 @@ module Utopia
           graphics.draw_line(f3[0], f3[1], c3[0], c3[1])
           graphics.draw_line(c4[0], f4[1], c4[0], c4[1])
         else
-          p2 = project(obj[:x], obj[:y], obj[:h], vx, vy)
+          r = obj[:r] || 0.5
+          v1 = project(obj[:x] - r, obj[:y] - r,0, vx,vy)
+          v2 = project(obj[:x] + r, obj[:y] - r,0, vx,vy)
+          v3 = project(obj[:x] + r, obj[:y] + r,0, vx,vy)
+          v4 = project(obj[:x] - r, obj[:y] + r,0, vx,vy)
 
-          graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
-          graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
-          graphics.draw_string(sprintf("%.2fm @ %.3f", distance, bearing), p2[0], p2[1]-10)
+          graphics.draw_line(v1[0], v1[1], v2[0], v2[1])
+          graphics.draw_line(v2[0], v2[1], v3[0], v3[1])
+          graphics.draw_line(v3[0], v3[1], v4[0], v4[1])
+          graphics.draw_line(v4[0], v4[1], v1[0], v1[1])
+
+          if obj[:h] then
+            p2 = project(obj[:x], obj[:y], obj[:h], vx, vy)
+
+            # graphics.draw_rect(p2[0]-2,p2[1]-2,4,4)
+            graphics.draw_line(p1[0], p1[1], p2[0], p2[1])
+            graphics.draw_string(sprintf("%.2fm @ %.3f", distance, bearing), p2[0], p2[1]-10)
+          end
         end
       end
 
@@ -201,7 +204,7 @@ module Utopia
       puts "fx = #{@fx}"
 
       @objects = [
-                    { :x => 9.0, :y => 9.0, :h => 2.0, :c => Color.new(255,0,0,255), :type => :col },
+                    { :x => 9.0, :y => 9.0, :h => 5.0, :c => Color.new(255,0,0,255), :type => :col },
                     { :x => 11.0, :y => 13.0, :h => 1.0, :c => Color.new(0,255,0,255) },
                     { :x => 10.0, :y => 8.0, :h => 0.5, :c => Color.new(255,255,0,255) },
                     { :x => 12.0, :y => 11.0, :h => 1.0, :c => Color.new(255,0,255,255) },
