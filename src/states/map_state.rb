@@ -154,11 +154,13 @@ module Utopia
       #   theta_x += Math::PI
       # end
 
+      distance = Math.sqrt((dx ** 2) + (dy ** 2))
+
       px = vx + (@fx * Math.tan(theta_x))
 
       dh = h.to_f - 1.0
 
-      theta_y = Math.atan(dh / dy.abs)
+      theta_y = Math.atan(dh / distance)
 
       py = vy - (@fx * Math.tan(theta_y))
 
@@ -175,7 +177,6 @@ module Utopia
       end
 
       bearing = normalise_radians(base + (mult * -(theta_x - @d)))
-      distance = Math.sqrt((dx ** 2) + (dy ** 2))
 
       [px,py, bearing, distance]
     end
